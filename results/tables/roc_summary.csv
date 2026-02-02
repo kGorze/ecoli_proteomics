@@ -1,0 +1,3 @@
+Wariant,N_UPS,N_Ecoli,TP,FP,Sensitivity_pct,Specificity_pct,Precision_pct,AUC
+Median (bez imputacji),33,2041,28,0,84.8,100,100,1
+VSN,33,2041,24,0,72.7,100,100,1
