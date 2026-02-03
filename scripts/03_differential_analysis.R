@@ -76,14 +76,52 @@ print(round(cor_matrix, 3))
 # Hierarchiczne klastrowanie
 hc <- hclust(as.dist(1 - cor_matrix), method = "complete")
 
-# Zapisz dendrogram
-png("results/figures/diagnostic_dendrogram.png", width = 800, height = 600, res = 150)
-par(mar = c(5, 4, 4, 2))
-plot(hc, main = "Hierarchiczne klastrowanie próbek\n(oparte na korelacji Pearsona)",
-     xlab = "Próbki", ylab = "1 - korelacja Pearsona",
-     sub = "Czy próbki klastrują się według grupy (UPS1 vs UPS2)?")
-# Dodaj kolorowanie według grupy
-rect.hclust(hc, k = 2, border = c("red", "blue"))
+# Zapisz dendrogram z lepszą wizualizacją używając dendextend
+png("results/figures/diagnostic_dendrogram.png", width = 900, height = 700, res = 150)
+
+# Sprawdź czy dendextend jest dostępny
+if (requireNamespace("dendextend", quietly = TRUE)) {
+  library(dendextend)
+  
+  # Stwórz dendrogram
+  dend <- as.dendrogram(hc)
+  
+  # Przypisz kolory do etykiet (UPS1 = czerwony, UPS2 = niebieski)
+  sample_labels <- labels(dend)
+  label_colors <- ifelse(grepl("UPS1", sample_labels), "#E41A1C", "#377EB8")
+  
+  # Koloruj etykiety i gałęzie
+  dend <- dend %>%
+    set("labels_col", label_colors) %>%
+    set("labels_cex", 0.8) %>%
+    set("branches_k_color", k = 2, value = c("#E41A1C", "#377EB8"))
+  
+  # Rysuj
+  par(mar = c(8, 5, 4, 2))
+  plot(dend, 
+       main = "Hierarchiczne klastrowanie próbek\n(oparte na korelacji Pearsona)",
+       ylab = "Dystans (1 - r)",
+       sub = "")
+  
+  # Dodaj legendę
+  legend("topright", 
+         legend = c("UPS1", "UPS2"), 
+         col = c("#E41A1C", "#377EB8"), 
+         pch = 15, 
+         cex = 0.9,
+         title = "Grupa")
+  
+
+  
+} else {
+  # Fallback do podstawowego wykresu
+  par(mar = c(8, 5, 4, 2))
+  plot(hc, main = "Hierarchiczne klastrowanie próbek\n(oparte na korelacji Pearsona)",
+       xlab = "", ylab = "Dystans (1 - r)",
+       sub = "Czy próbki klastrują się według grupy (UPS1 vs UPS2)?")
+  rect.hclust(hc, k = 2, border = c("#E41A1C", "#377EB8"))
+}
+
 dev.off()
 message("Zapisano: results/figures/diagnostic_dendrogram.png")
 
@@ -423,10 +461,10 @@ ggsave("results/figures/volcano_median.png", volcano_v1, width = 10, height = 8,
 
 # Volcano dla wariantu 2
 volcano_v2 <- create_volcano_plot(results_v2, "Volcano Plot - VSN")
-ggsave("results/figures/volcano_vsn_qrilc.png", volcano_v2, width = 10, height = 8, dpi = 150)
+ggsave("results/figures/volcano_vsn.png", volcano_v2, width = 10, height = 8, dpi = 150)
 
 message("Zapisano: results/figures/volcano_median.png")
-message("Zapisano: results/figures/volcano_vsn_qrilc.png")
+message("Zapisano: results/figures/volcano_vsn.png")
 
 # ==============================================================================
 # 5. PCA PLOT
@@ -476,7 +514,7 @@ create_pca_plot <- function(log2_matrix, ups1_cols, ups2_cols, title) {
 # PCA dla wariantu 2 (lepsze dla pełnych danych po imputacji)
 pca_v2 <- create_pca_plot(log2_v2, ups1_cols, ups2_cols, 
                            "PCA - VSN Normalized Data")
-ggsave("results/figures/pca_vsn_qrilc.png", pca_v2, width = 10, height = 8, dpi = 150)
+ggsave("results/figures/pca_vsn.png", pca_v2, width = 10, height = 8, dpi = 150)
 
 # Spróbuj PCA dla wariantu 1 (może mieć problemy z NA)
 tryCatch({
@@ -488,7 +526,7 @@ tryCatch({
   message("PCA dla wariantu 1 niemożliwe z powodu brakujących wartości")
 })
 
-message("Zapisano: results/figures/pca_vsn_qrilc.png")
+message("Zapisano: results/figures/pca_vsn.png")
 
 # ==============================================================================
 # 6. HEATMAP TOP BIAŁEK
@@ -559,8 +597,8 @@ message("Zapisano: results/figures/heatmap_median.png")
 # Heatmap dla wariantu 2 (VSN)
 create_heatmap(log2_v2, results_v2, ups1_cols, ups2_cols,
                "Top 50 Differential Proteins - VSN",
-               "results/figures/heatmap_vsn_qrilc.png")
-message("Zapisano: results/figures/heatmap_vsn_qrilc.png")
+               "results/figures/heatmap_vsn.png")
+message("Zapisano: results/figures/heatmap_vsn.png")
 
 # --- PORÓWNANIE SIDE-BY-SIDE ---
 message("Tworzenie porównania heatmap Median vs VSN...")
@@ -570,7 +608,7 @@ tryCatch({
   library(magick)
   
   img1 <- image_read("results/figures/heatmap_median.png")
-  img2 <- image_read("results/figures/heatmap_vsn_qrilc.png")
+  img2 <- image_read("results/figures/heatmap_vsn.png")
   
   # Połącz obok siebie
   combined <- image_append(c(img1, img2), stack = FALSE)
@@ -596,7 +634,7 @@ message("\n=== Zapisywanie wyników analizy różnicowej ===")
 
 # Zapisz tabele wyników
 write_csv(results_v1, "results/tables/differential_results_median.csv")
-write_csv(results_v2, "results/tables/differential_results_vsn_qrilc.csv")
+write_csv(results_v2, "results/tables/differential_results_vsn.csv")
 
 # Zapisz do RDS dla dalszych analiz
 differential_results <- list(
@@ -613,7 +651,7 @@ differential_results <- list(
 saveRDS(differential_results, "results/differential_results.rds")
 
 message("Zapisano: results/tables/differential_results_median.csv")
-message("Zapisano: results/tables/differential_results_vsn_qrilc.csv")
+message("Zapisano: results/tables/differential_results_vsn.csv")
 message("Zapisano: results/differential_results.rds")
 
 message("\n=== Analiza różnicowa zakończona ===")

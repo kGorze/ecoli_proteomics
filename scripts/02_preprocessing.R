@@ -187,7 +187,7 @@ message("Zakres wartości log2: ", round(min(log2_matrix, na.rm = TRUE), 2),
 # 6. FILTROWANIE "MIN 2 Z 3 POWTÓRZEŃ"
 # ==============================================================================
 
-message("\n=== Filtrowanie min 2 z 3 powtórzeń ===")
+message("\n=== Filtrowanie min 2/3 powtórzeń (lub 3 z 4) ===")
 
 n_ups1 <- length(ups1_cols)
 n_ups2 <- length(ups2_cols)
@@ -275,10 +275,11 @@ if (n_proteins_after > 100) {
 
 # Przygotuj annotacje kolumn
 col_annotation <- data.frame(
-  Group = ifelse(grepl(" L[0-9]", colnames(missing_before_plot)), "UPS1", "UPS2"),
+  Group = factor(ifelse(grepl("UPS1", colnames(missing_before_plot)), "UPS1", "UPS2"), 
+                 levels = c("UPS1", "UPS2")),
   row.names = colnames(missing_before_plot)
 )
-ann_colors <- list(Group = c("UPS1" = "#3498db", "UPS2" = "#e74c3c"))
+ann_colors <- list(Group = c("UPS1" = "#E41A1C", "UPS2" = "#377EB8"))  # czerwony/niebieski - spójne z innymi wykresami
 
 # Statystyki do tytułów
 pct_missing_before <- round(mean(is.na(log2_matrix)) * 100, 1)
@@ -291,7 +292,7 @@ par(mfrow = c(1, 2))
 # Heatmapa 1: PRZED filtrowaniem
 p1 <- pheatmap::pheatmap(
   missing_before_plot,
-  color = c("steelblue", "firebrick"),
+  color = c("white", "#2c3e50"),  # białe = dane obecne, ciemnoszary = NA
   main = paste0("PRZED filtrowaniem\n(", nrow(log2_matrix), " białek, ", pct_missing_before, "% NA)"),
   cluster_rows = TRUE,
   cluster_cols = FALSE,
@@ -307,8 +308,8 @@ p1 <- pheatmap::pheatmap(
 # Heatmapa 2: PO filtrowaniu
 p2 <- pheatmap::pheatmap(
   missing_after_plot,
-  color = c("steelblue", "firebrick"),
-  main = paste0("PO filtrowaniu (min 2/3 replik)\n(", nrow(log2_filtered), " białek, ", pct_missing_after, "% NA)"),
+  color = c("white", "#2c3e50"),  # białe = dane obecne, ciemnoszary = NA
+  main = paste0("PO filtrowaniu (min 3/4 replik)\n(", nrow(log2_filtered), " białek, ", pct_missing_after, "% NA)"),
   cluster_rows = TRUE,
   cluster_cols = FALSE,
   show_rownames = FALSE,

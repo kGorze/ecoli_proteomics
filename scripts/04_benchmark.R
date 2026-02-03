@@ -336,7 +336,7 @@ if (!is.na(benchmark_v1$rmse) && !is.na(benchmark_v2$rmse)) {
     message("Wariant 1 (Median) ma lepszą dokładność FC (niższe RMSE): ", 
             round(benchmark_v1$rmse, 2), " vs ", round(benchmark_v2$rmse, 2))
   } else {
-    message("Wariant 2 (VSN+QRILC) ma lepszą dokładność FC (niższe RMSE): ", 
+    message("Wariant 2 (VSN) ma lepszą dokładność FC (niższe RMSE): ", 
             round(benchmark_v2$rmse, 2), " vs ", round(benchmark_v1$rmse, 2))
   }
 }
@@ -398,11 +398,11 @@ if (!is.null(benchmark_v1$ups_comparison)) {
 # Wykres dla wariantu 2
 if (!is.null(benchmark_v2$ups_comparison)) {
   p2 <- create_expected_vs_observed_plot(benchmark_v2, 
-                                          "Expected vs Observed FC - VSN+QRILC")
+                                          "Expected vs Observed FC - VSN")
   if (!is.null(p2)) {
-    ggsave("results/figures/expected_vs_observed_vsn_qrilc.png", p2, 
+    ggsave("results/figures/expected_vs_observed_vsn.png", p2, 
            width = 10, height = 8, dpi = 150)
-    message("Zapisano: results/figures/expected_vs_observed_vsn_qrilc.png")
+    message("Zapisano: results/figures/expected_vs_observed_vsn.png")
   }
 }
 
@@ -473,7 +473,7 @@ run_roc_analysis <- function(results_table, variant_name) {
   message("  Sensitivity (Recall): ", round(sensitivity * 100, 1), "%")
   message("  Specificity: ", round(specificity * 100, 1), "%")
   message("  Precision: ", round(precision * 100, 1), "%")
-  message("  FDR: ", round(fdr * 100, 1), "%")
+  message("  FDR (Empirical): ", round(fdr * 100, 1), "%")
   
   # Oblicz ROC curve i AUC
   roc_result <- NULL
@@ -523,23 +523,28 @@ if (has_pROC && !is.null(roc_v1) && !is.null(roc_v2) &&
   # Wykres ROC dla obu wariantów
   png("results/figures/roc_comparison.png", width = 800, height = 700, res = 100)
   
+  # Rysuj pierwszą krzywą
   plot(roc_v1$roc_curve, 
        main = "ROC Curves - Comparison of Normalization Methods",
-       col = "#E41A1C", lwd = 2,
+       col = "#E41A1C", lwd = 3, lty = 1,  # gruba linia ciągła
        print.auc = FALSE, legacy.axes = TRUE)
   
+  # Druga krzywa z innym stylem - przerywana i cieńsza
   plot(roc_v2$roc_curve, 
-       add = TRUE, col = "#377EB8", lwd = 2)
+       add = TRUE, col = "#377EB8", lwd = 2, lty = 2)  # linia przerywana
   
   # Linia diagonalna (random classifier)
-  abline(a = 0, b = 1, lty = 2, col = "gray50")
+  abline(a = 0, b = 1, lty = 3, col = "gray50")
   
   legend("bottomright", 
          legend = c(
            paste0("Median (AUC = ", round(roc_v1$auc, 3), ")"),
            paste0("VSN (AUC = ", round(roc_v2$auc, 3), ")")
          ),
-         col = c("#E41A1C", "#377EB8"), lwd = 2)
+         col = c("#E41A1C", "#377EB8"), 
+         lwd = c(3, 2), 
+         lty = c(1, 2),  # solid, dashed
+         cex = 1.1)
   
   dev.off()
   message("Zapisano: results/figures/roc_comparison.png")
@@ -588,6 +593,10 @@ benchmark_results <- list(
 saveRDS(benchmark_results, "results/benchmark_results.rds")
 write_csv(comparison_summary, "results/tables/benchmark_comparison.csv")
 
+# EKSTRA TABELA UPS - wg sugestii
+write_csv(ups_expected_fc, "results/tables/ups_expected_legend.csv")
+message("Zapisano: results/tables/ups_expected_legend.csv (Legenda stężeń UPS)")
+
 message("Zapisano: results/benchmark_results.rds")
 message("Zapisano: results/tables/benchmark_comparison.csv")
 
@@ -606,6 +615,7 @@ fp_summary <- data.frame(
 )
 
 message("=== FALSE POSITIVES SUMMARY ===")
+message("Note: FP_Rate on E. coli serves as an empirical estimate of FDR (since E. coli should be null).")
 print(fp_summary)
 
 write_csv(fp_summary, "results/tables/false_positives_summary.csv")
@@ -655,7 +665,7 @@ if (requireNamespace("png", quietly = TRUE) &&
   
   # PCA Comparison
   pca_median <- load_png_as_grob("results/figures/pca_median.png")
-  pca_vsn <- load_png_as_grob("results/figures/pca_vsn_qrilc.png")
+  pca_vsn <- load_png_as_grob("results/figures/pca_vsn.png")
   
   if (!is.null(pca_median) && !is.null(pca_vsn)) {
     png("results/figures/comparison_pca.png", width = 1600, height = 700, res = 100)
@@ -668,7 +678,7 @@ if (requireNamespace("png", quietly = TRUE) &&
   
   # Volcano Comparison
   volcano_median <- load_png_as_grob("results/figures/volcano_median.png")
-  volcano_vsn <- load_png_as_grob("results/figures/volcano_vsn_qrilc.png")
+  volcano_vsn <- load_png_as_grob("results/figures/volcano_vsn.png")
   
   if (!is.null(volcano_median) && !is.null(volcano_vsn)) {
     png("results/figures/comparison_volcano.png", width = 1600, height = 700, res = 100)
@@ -681,7 +691,7 @@ if (requireNamespace("png", quietly = TRUE) &&
   
   # Expected vs Observed Comparison
   exp_median <- load_png_as_grob("results/figures/expected_vs_observed_median.png")
-  exp_vsn <- load_png_as_grob("results/figures/expected_vs_observed_vsn_qrilc.png")
+  exp_vsn <- load_png_as_grob("results/figures/expected_vs_observed_vsn.png")
   
   if (!is.null(exp_median) && !is.null(exp_vsn)) {
     png("results/figures/comparison_expected_vs_observed.png", width = 1600, height = 700, res = 100)

@@ -46,13 +46,14 @@ Ten raport przedstawia analizę danych proteomicznych z eksperymentu **"Dynamic 
 
 ## 1.3 Opis danych
 
-- **UPS1**: 48 rekombinowanych białek ludzkich w mieszaninie **ekwimolarnej** (10,000 fmol każde)
+- **UPS1**: 48 rekombinowanych białek ludzkich w mieszaninie **ekwimolarnej** (5,000 fmol każde)
 - **UPS2**: Te same białka w 5 grupach o różnych stężeniach:
   - Grupa A (5 białek): 50,000 fmol → **log2FC = 2.32**
   - Grupa B (10 białek): 5,000 fmol → **log2FC = -1.00**
   - Grupa C (8 białek): 500 fmol → **log2FC = -4.32**
   - Grupa D (15 białek): 50 fmol → **log2FC = -7.64**
   - Grupa E (10 białek): 5 fmol → **log2FC = -10.97**
+  - Grupa F (8 białek): 0.5 fmol → **log2FC = -14.29**
 - **Tło E. coli**: ~4000 białek bakteryjnych (powinny być niezmienne)
 
 ```{r load_data}
@@ -143,7 +144,7 @@ W analizie przetestowano dwa warianty przetwarzania:
 | Wariant | Normalizacja | Imputacja |
 |---------|--------------|-----------|
 | **Wariant 1** | Median centering | Brak (analiza z NA) |
-| **Wariant 2** | VSN (Variance Stabilizing) | QRILC (Quantile Regression) |
+| **Wariant 2** | VSN (Variance Stabilizing) | Brak (Analiza na kompletnych) |
 
 ---
 
@@ -190,7 +191,7 @@ v1_plot / v2_plot
 
 ## 3.2 PCA
 
-```{r pca, eval=data_loaded, fig.cap="PCA po normalizacji VSN+QRILC. Wyraźna separacja grup UPS1 i UPS2."}
+```{r pca, eval=data_loaded, fig.cap="PCA po normalizacji VSN. Wyraźna separacja grup UPS1 i UPS2."}
 # PCA
 complete_rows <- complete.cases(diff_results$log2_v2)
 pca_matrix <- diff_results$log2_v2[complete_rows, 
@@ -293,7 +294,7 @@ kable(fdr_df, caption = "Empiryczny FDR na białkach E. coli",
 # FDR przy różnych progach
 fdr_combined <- bind_rows(
   benchmark$v1$fdr_summary %>% mutate(Wariant = "Median"),
-  benchmark$v2$fdr_summary %>% mutate(Wariant = "VSN+QRILC")
+  benchmark$v2$fdr_summary %>% mutate(Wariant = "VSN")
 )
 
 ggplot(fdr_combined, aes(x = factor(Threshold), y = Empirical_FDR_pct, fill = Wariant)) +
@@ -304,7 +305,7 @@ ggplot(fdr_combined, aes(x = factor(Threshold), y = Empirical_FDR_pct, fill = Wa
     x = "Próg adj.P.Val",
     y = "Empiryczny FDR (%)"
   ) +
-  scale_fill_manual(values = c("Median" = "#E41A1C", "VSN+QRILC" = "#377EB8")) +
+  scale_fill_manual(values = c("Median" = "#E41A1C", "VSN" = "#377EB8")) +
   theme_minimal()
 ```
 
@@ -347,7 +348,7 @@ plot_exp_obs <- function(ups_df, title, corr, rmse) {
 
 p1 <- plot_exp_obs(benchmark$v1$ups_comparison, "Wariant 1: Median", 
                    benchmark$v1$correlation, benchmark$v1$rmse)
-p2 <- plot_exp_obs(benchmark$v2$ups_comparison, "Wariant 2: VSN+QRILC",
+p2 <- plot_exp_obs(benchmark$v2$ups_comparison, "Wariant 2: VSN",
                    benchmark$v2$correlation, benchmark$v2$rmse)
 
 if (!is.null(p1) && !is.null(p2)) {
@@ -373,10 +374,10 @@ kable(benchmark$comparison, caption = "Porównanie wariantów pipeline'u") %>%
 ```{r conclusions, eval=data_loaded, results='asis'}
 # Określ lepszy wariant
 better_fdr <- ifelse(benchmark$v1$empirical_fdr < benchmark$v2$empirical_fdr, 
-                     "Wariant 1 (Median)", "Wariant 2 (VSN+QRILC)")
+                     "Wariant 1 (Median)", "Wariant 2 (VSN)")
 better_rmse <- ifelse(!is.na(benchmark$v1$rmse) && !is.na(benchmark$v2$rmse) && 
                       benchmark$v1$rmse < benchmark$v2$rmse,
-                     "Wariant 1 (Median)", "Wariant 2 (VSN+QRILC)")
+                     "Wariant 1 (Median)", "Wariant 2 (VSN)")
 
 cat("### Główne obserwacje:\n\n")
 
