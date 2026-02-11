@@ -30,6 +30,10 @@ fałszywych trafień, dokładność fold-change dla UPS, dla białek UPS porówn
 oczekiwanym (UPS2 ma znane grupy stężeń względem UPS1, informacje na podanej wcześniej 
 stronie producenta). 
 metryki: korelacja, RMSE, wykres “expected vs observed”. 
+5) [AI / SOTA] Analiza szumu tła E. coli: Użycie modelu językowego białek (ESM-2) do wygenerowania 
+embeddingów dla białek E. coli. Wizualizacja przestrzeni latentnej (UMAP/PCA) w celu sprawdzenia, 
+czy "fałszywie pozytywne" białka tła grupują się biologicznie (np. czy są to białka rybosomalne, 
+błonowe, czy o specyficznej strukturze). To pokazuje nowoczesne podejście "AI-driven biology".
 Dodatkowo może być „benchmark” decyzji pipeline’u (najlepiej 2–3 warianty), np. porównaj: median 
 normalization + bez imputacji, vsn + QRILC (lub MinProb), wskaż który wariant daje mniej False 
 Positive w E. coli i lepszą zgodność FC dla UPS. 
@@ -37,3 +41,9 @@ Raport:
 Powinien zawierać opis danych, opis „benchmarku”, rysunki (pełna dowolność, np. „missingness 
 heatmap”, PCA, volcano (kolory: E. coli vs UPS), expected-vs-observed, tabela false positive), krótka 
 sekcja “Wnioski”: który wariant pipeline’u jest najbardziej wiarygodny i dlaczego. 
+Status:
+[X] 1. Pobranie danych
+[X] 2. Preprocessing
+[X] 3. Analiza różnicowa
+[X] 4. Benchmark
+[X] 5. Analiza AI (AI Latent Space)

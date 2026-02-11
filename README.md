@@ -75,6 +75,10 @@ source("scripts/04_benchmark.R")
 
 # 5. Generuj raport
 rmarkdown::render("scripts/05_report.Rmd", output_file = "../report.html")
+
+# 6. Analiza AI (opcjonalne)
+# Najpierw zainstaluj pakiety: install_python_packages.bat
+system("python scripts/06_ai_analysis.py")
 ```
 
 ## Opis danych
@@ -111,6 +115,8 @@ Po uruchomieniu analizy znajdziesz:
 3. **results/tables/** - tabele CSV:
    - `differential_results_*.csv` - wyniki analizy różnicowej
    - `benchmark_comparison.csv` - porównanie wariantów
+
+4. **results/figures/ai_latent_space_noise.png** - wizualizacja przestrzeni latentnej (AI) pokazująca czy "szum" ma podłoże biologiczne.
 
 ## Referencje
 
